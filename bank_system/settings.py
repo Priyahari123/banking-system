@@ -133,12 +133,12 @@ REST_FRAMEWORK = {
 }
 APPEND_SLASH = True
 
-CELERY_BROKER_URL = 'redis://127.0.0.1:6379/0'  # Redis running locally
+CELERY_BROKER_URL = 'redis://127.0.0.1:6379/0' 
 CELERY_RESULT_BACKEND = 'redis://127.0.0.1:6379/0'
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
-CELERY_TIMEZONE = 'Asia/Kolkata'  # Or your timezone
+CELERY_TIMEZONE = 'Asia/Kolkata'  
 
 
 
@@ -162,7 +162,7 @@ LOGGING = {
         },
         'file': {
             'class': 'logging.FileHandler',
-            'filename': 'bank_app.log',  # Logs will go here
+            'filename': 'bank_app.log',  
             'formatter': 'verbose',
         },
     },

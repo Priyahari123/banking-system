@@ -1,30 +1,24 @@
 from django.shortcuts import render
-
-# Create your views here.
 from rest_framework import generics, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from .models import BankAccount, CustomUser
-from .serializers import BankAccountSerializer, LoanCreateSerializer
+from .models import BankAccount, CustomUser, Loan
+from .serializers import BankAccountSerializer, LoanCreateSerializer,UserCreateSerializer
 from rest_framework.views import APIView
-from .models import Loan
 from celery import shared_task
-from rest_framework import generics
-from .serializers import UserCreateSerializer
 from .permissions import IsManager
 from rest_framework.authtoken.models import Token
-from rest_framework.views import APIView
-from rest_framework.response import Response
+
+
 from django.contrib.auth import authenticate
 from rest_framework import status
 from .task import apply_interest_task
 import logging
 
-logger = logging.getLogger('bank_app')  # use app-specific logger
-
+logger = logging.getLogger('bank_app')  
 
 class LoginAPIView(APIView):
-    permission_classes = []  # anyone can login
+    permission_classes = []  
 
     def post(self, request):
         email = request.data.get('email')
@@ -74,7 +68,7 @@ class AccountDetailAPIView(generics.RetrieveAPIView):
             logger.warning(f"Access denied for employee: {user.id}")
             return None
 
-        # Do NOT overwrite balance
+        
         return account
 
     def get(self, request, *args, **kwargs):
@@ -85,7 +79,7 @@ class AccountDetailAPIView(generics.RetrieveAPIView):
         serializer = self.get_serializer(account)
         data = serializer.data
 
-        # Include loans info
+        
         loans = Loan.objects.filter(account=account)
         data['loans'] = [
             {
@@ -127,12 +121,14 @@ class CreateLoanAPIView(APIView):
         logger.warning(f"Loan creation failed by user_id={request.user.id}: errors={serializer.errors}")
         return Response(serializer.errors, status=400)
 
+
+
 class PayLoanAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
         customer_id = request.data.get('customer_id')
-        loan_id = request.data.get('loan_id')  # Which loan to pay
+        loan_id = request.data.get('loan_id')  
         amount = float(request.data.get('amount', 0))
         user = request.user
 
@@ -144,12 +140,9 @@ class PayLoanAPIView(APIView):
         if amount <= 0:
             logger.warning(f"Invalid payment amount: {amount} by user_id={user.id}")
             return Response({"detail": "Invalid amount"}, status=400)
-
-        # Customer can pay only their own loan
         if user.role == 'customer' and user.customer_id != customer_id:
             logger.warning(f"Access denied: user_id={user.id} attempted to pay another customer's loan")
             return Response({"detail": "Access denied"}, status=403)
-
         try:
             account = BankAccount.objects.get(user__customer_id=customer_id)
         except BankAccount.DoesNotExist:
@@ -190,13 +183,14 @@ class PayLoanAPIView(APIView):
         logger.info(
             f"Account balance updated: customer_id={customer_id}, old_balance={old_balance}, new_balance={account.balance}"
         )
-
         return Response({
             "loan_id": loan.id,
             "paid_amount": loan.amount_paid,
             "pending_amount": loan.total_amount - loan.amount_paid,
             "updated_balance": account.balance
         })
+
+
 
 class ApplyInterestAPIView(APIView):
     permission_classes = [IsAuthenticated, IsManager]

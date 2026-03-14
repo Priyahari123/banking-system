@@ -8,8 +8,6 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'bank_system.settings')
 
 app = Celery('bank_system')
 
-# Load config from Django settings, CELERY_ namespace
 app.config_from_object('django.conf:settings', namespace='CELERY')
 
-# Auto-discover tasks from all installed apps
 app.autodiscover_tasks()

@@ -1,6 +1,7 @@
 # Mini Banking System
 
-[![Python](https://img.shields.io/badge/python-3.11-blue.svg)](https://www.python.org/)
+[![Python](https://img.shields.io/badge/python-3.12-blue.svg)](https://www.python.org/)
+[![Python](https://img.shields.io/badge/python-3.14-blue.svg)](https://www.python.org/)
 [![Django](https://img.shields.io/badge/django-4.x-green.svg)](https://www.djangoproject.com/)
 [![Celery](https://img.shields.io/badge/celery-5.x-orange.svg)](https://docs.celeryq.dev/)
 [![Redis](https://img.shields.io/badge/redis-7.x-red.svg)](https://redis.io/)
