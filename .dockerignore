@@ -1,0 +1,26 @@
+# Python cache and compiled files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environments
+venv/
+env/
+*.egg-info/
+
+# Django stuff
+db.sqlite3
+*.log
+media/
+staticfiles/
+*.pot
+*.mo
+
+# Git and other config files
+.git/
+.gitignore
+
+# Docker and OS files
+.DS_Store
+docker-compose.override.yml
