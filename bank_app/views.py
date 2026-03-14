@@ -164,6 +164,7 @@ class ApplyInterestAPIView(APIView):
 
     def post(self, request):
         interest_percent = request.data.get('interest_percent')
+        print(interest_percent,"interest_percent")
         if interest_percent is None:
             return Response({"detail": "interest_percent is required"}, status=status.HTTP_400_BAD_REQUEST)
         try:

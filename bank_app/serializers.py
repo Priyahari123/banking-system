@@ -27,8 +27,6 @@ class UserCreateSerializer(serializers.ModelSerializer):
         user = CustomUser.objects.create(**validated_data)
         user.set_password(password)
         user.save()
-        # create bank account
-        from .models import BankAccount
         BankAccount.objects.create(user=user)
         return user
 
