@@ -5,7 +5,7 @@ from rest_framework import generics, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from .models import BankAccount, CustomUser
-from .serializers import BankAccountSerializer
+from .serializers import BankAccountSerializer, LoanCreateSerializer
 from rest_framework.views import APIView
 from .models import Loan
 from celery import shared_task
@@ -17,6 +17,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.contrib.auth import authenticate
 from rest_framework import status
+from .task import apply_interest_task
 
 
 class LoginAPIView(APIView):
@@ -42,7 +43,6 @@ class LoginAPIView(APIView):
             return Response({"detail":"Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
 
 
-
 class AccountDetailAPIView(generics.RetrieveAPIView):
     serializer_class = BankAccountSerializer
     permission_classes = [IsAuthenticated]
@@ -50,6 +50,7 @@ class AccountDetailAPIView(generics.RetrieveAPIView):
     def get_object(self):
         customer_id = self.kwargs['customer_id']
         user = self.request.user
+
         try:
             account = BankAccount.objects.get(user__customer_id=customer_id)
         except BankAccount.DoesNotExist:
@@ -60,65 +61,122 @@ class AccountDetailAPIView(generics.RetrieveAPIView):
             return None
         if user.role == 'employee' and account.user.role != 'customer':
             return None
+
+        # Dynamically calculate updated balance
+        total_loans = sum(loan.total_amount for loan in Loan.objects.filter(account=account))
+        total_paid = sum(loan.amount_paid for loan in Loan.objects.filter(account=account))
+        account.balance = total_loans - total_paid
+        account.save()
+        
         return account
 
     def get(self, request, *args, **kwargs):
         account = self.get_object()
         if not account:
             return Response({"detail":"Access denied"}, status=403)
+
         serializer = self.get_serializer(account)
-        return Response(serializer.data)
-    
+        data = serializer.data
+
+        # Include detailed loan info
+        loans = Loan.objects.filter(account=account)
+        data['loans'] = [
+            {
+                "id": loan.id,
+                "total_amount": loan.total_amount,
+                "amount_paid": loan.amount_paid,
+                "status": loan.status
+            }
+            for loan in loans
+        ]
+        return Response(data)
+
+
+class CreateLoanAPIView(APIView):
+    permission_classes = [IsAuthenticated, IsManager]
+
+    def post(self, request):
+        serializer = LoanCreateSerializer(data=request.data)
+        if serializer.is_valid():
+            loan = serializer.save()
+            return Response({
+                "loan_id": loan.id,
+                "customer_id": loan.account.user.customer_id,
+                "total_amount": loan.total_amount,
+                "status": loan.status,
+                "updated_balance": loan.account.balance
+            }, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=400)
+
 class PayLoanAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
         customer_id = request.data.get('customer_id')
-        amount = float(request.data.get('amount',0))
+        loan_id = request.data.get('loan_id')  # Specify which loan to pay
+        amount = float(request.data.get('amount', 0))
         user = request.user
 
         if amount <= 0:
-            return Response({"detail":"Invalid amount"}, status=400)
+            return Response({"detail": "Invalid amount"}, status=400)
 
         # Customer can pay only their loan
         if user.role == 'customer' and user.customer_id != customer_id:
-            return Response({"detail":"Access denied"}, status=403)
+            return Response({"detail": "Access denied"}, status=403)
 
         try:
             account = BankAccount.objects.get(user__customer_id=customer_id)
-            loan = Loan.objects.filter(account=account, status='pending').first()
-            if not loan:
-                return Response({"detail":"No active loan"}, status=400)
         except BankAccount.DoesNotExist:
-            return Response({"detail":"Account not found"}, status=404)
+            return Response({"detail": "Account not found"}, status=404)
+
+        # Filter the specific loan
+        try:
+            loan = Loan.objects.get(account=account, id=loan_id, status='pending')
+        except Loan.DoesNotExist:
+            return Response({"detail": "No active loan with this ID"}, status=400)
 
         if amount > (loan.total_amount - loan.amount_paid):
-            return Response({"detail":"Overpayment not allowed"}, status=400)
+            return Response({"detail": "Overpayment not allowed"}, status=400)
 
+        # Update loan payment
         loan.amount_paid += amount
         if loan.amount_paid >= loan.total_amount:
             loan.status = 'completed'
         loan.save()
 
-        return Response({"loan_id": loan.id, "pending_amount": loan.total_amount - loan.amount_paid})
-    
-@shared_task
-def apply_interest_task(interest_percent):
-    updated_accounts = []
-    for account in BankAccount.objects.all():
-        account.balance += account.balance * interest_percent / 100
+        # Recalculate the account balance dynamically
+        total_loans = sum(l.total_amount for l in Loan.objects.filter(account=account))
+        total_paid = sum(l.amount_paid for l in Loan.objects.filter(account=account))
+        account.balance = total_loans - total_paid
         account.save()
-        updated_accounts.append({"customer_id": account.user.customer_id, "new_balance": account.balance})
-    return updated_accounts
+
+        return Response({
+            "loan_id": loan.id,
+            "paid_amount": loan.amount_paid,
+            "pending_amount": loan.total_amount - loan.amount_paid,
+            "updated_balance": account.balance
+        })
+    
+
 
 class ApplyInterestAPIView(APIView):
     permission_classes = [IsAuthenticated, IsManager]
 
     def post(self, request):
-        percent = float(request.data.get('interest_percent',0))
-        task = apply_interest_task.delay(percent)
-        return Response({"detail":"Interest application started asynchronously"})
-    
+        interest_percent = request.data.get('interest_percent')
+        if interest_percent is None:
+            return Response({"detail": "interest_percent is required"}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            interest_percent = float(interest_percent)
+            if interest_percent <= 0:
+                return Response({"detail": "interest_percent must be greater than 0"}, status=status.HTTP_400_BAD_REQUEST)
+        except ValueError:
+            return Response({"detail": "interest_percent must be a number"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Trigger Celery task
+        apply_interest_task.delay(interest_percent)
+
+        return Response({"detail": f"Interest of {interest_percent}% applied asynchronously."}, status=status.HTTP_200_OK)
 
 class CreateUserAPIView(generics.CreateAPIView):
     serializer_class = UserCreateSerializer

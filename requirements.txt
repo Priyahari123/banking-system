@@ -1,0 +1,29 @@
+# Core Django
+Django>=4.2,<5.0
+
+# Django REST Framework
+djangorestframework>=3.15,<4.0
+
+# Authentication
+djangorestframework-simplejwt>=6.0,<7.0
+
+# Database (PostgreSQL)
+psycopg2-binary>=2.9,<3.0
+
+# Celery for async tasks
+celery>=5.3,<6.0
+redis>=5.0,<6.0
+
+# For password hashing and security
+bcrypt>=4.0,<5.0
+
+# Optional utilities
+django-cors-headers>=4.0,<5.0
+python-dotenv>=1.0,<2.0
+
+# Testing
+pytest>=8.0,<9.0
+pytest-django>=4.0,<5.0
+
+# Others
+requests>=2.31,<3.0
