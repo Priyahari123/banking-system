@@ -13,23 +13,21 @@ def apply_interest_task(interest_percent):
 
     logger.info(f"Starting apply_interest_task with interest_percent={interest_percent}")
 
-    for account in BankAccount.objects.all():
+    with transaction.atomic():
 
-        with transaction.atomic():
+        for account in BankAccount.objects.all():
 
             old_balance = account.balance
-
             interest_amount = (old_balance * interest_percent) / Decimal('100')
 
             account.balance = old_balance + interest_amount
-
             account.save()
 
             logger.info(
                 f"Account {account.user.customer_id} updated: {old_balance} -> {account.balance}"
             )
 
-    logger.info("Interest applied to all accounts")
+    logger.info("Interest applied to all accounts") 
 
 
 
