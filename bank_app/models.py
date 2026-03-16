@@ -49,7 +49,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
 
 class BankAccount(models.Model):
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE)
-    balance = models.FloatField(default=0.0)
+    balance = models.DecimalField(max_digits=12, decimal_places=2, default=0)
 
     def __str__(self):
         return f"{self.user.customer_id} - {self.balance}"
