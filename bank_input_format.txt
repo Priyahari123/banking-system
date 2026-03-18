@@ -1,0 +1,32 @@
+LOGIN
+{
+  "email": "manager123@gmail.com",
+  "password": "test123"
+}
+
+CREATE USER BY MANAGER
+{
+  "email": "customer1@bank.com",
+  "mobile_number": "9876543210",
+  "role": "customer",
+  "password": "test123",
+  "customer_id": "CUST1001"
+}
+
+LOAN CREATED BY MANAGER
+{
+  "customer_id": "CUST001",
+  "total_amount": 100000
+}
+
+PAY LOAN FOR CUSTOMER
+{
+  "customer_id": "CUST1001",
+  "loan_id": 5,
+  "amount": 30000
+}
+
+APPLY INTEREST BY MANAGER
+{
+  "interest_percent": 10
+}

@@ -114,3 +114,165 @@ Start Celery Worker
 python -m celery -A bank_system worker --loglevel=info -P solo
 
 
+This is the input format 
+bank_input_format.txt
+---------------------------------------
+
+LOGIN  - /api/login/
+{
+  "email": "manager123@gmail.com",
+  "password": "test123"
+}
+----------------------------------------------
+
+CREATE USER BY MANAGER -/api/user/create/
+{
+  "email": "customer1@bank.com",
+  "mobile_number": "9876543210",
+  "role": "customer",
+  "password": "test123",
+  "customer_id": "CUST1001"
+}
+------------------------------------------------
+
+LOAN CREATED BY MANAGER -/api/loan/create/
+{
+  "customer_id": "CUST001",
+  "total_amount": 100000
+}
+-------------------------------------------------------
+
+PAY LOAN FOR CUSTOMER -/api/loan/pay/
+{
+  "customer_id": "CUST1001",
+  "loan_id": 5,
+  "amount": 30000
+}
+----------------------------------------------------------
+APPLY INTEREST BY MANAGER -/api/account/apply_interest/
+{
+  "interest_percent": 10
+}
+----------------------------------------------------------
+
+
+Perfect! You can turn this into a **well-formatted README.md file** so it’s easy to read and use as a reference for your APIs. Here’s a professional and clean version using Markdown:
+
+---
+
+````markdown id="bank_readme"
+# Bank Project API Reference
+
+This document provides the API endpoints and sample inputs for the banking system.
+
+---
+
+## 1️⃣ LOGIN
+
+**Endpoint:** `/api/login/`  
+**Method:** POST  
+
+**Request Body:**
+```json
+{
+  "email": "manager123@gmail.com",
+  "password": "test123"
+}
+````
+
+---
+
+## 2️⃣ CREATE USER BY MANAGER
+
+**Endpoint:** `/api/user/create/`
+**Method:** POST
+
+**Request Body:**
+
+```json
+{
+  "email": "customer1@bank.com",
+  "mobile_number": "98765******",
+  "role": "customer",
+  "password": "test123",
+  "customer_id": "CUST1001"
+}
+```
+
+---
+
+## 3️⃣ LOAN CREATED BY MANAGER
+
+**Endpoint:** `/api/loan/create/`
+**Method:** POST
+
+**Request Body:**
+
+```json
+{
+  "customer_id": "CUST001",
+  "total_amount": 100000
+}
+```
+
+---
+
+## 4️⃣ PAY LOAN FOR CUSTOMER
+
+**Endpoint:** `/api/loan/pay/`
+**Method:** POST
+
+**Request Body:**
+
+```json
+{
+  "customer_id": "CUST1001",
+  "loan_id": 5,
+  "amount": 30000
+}
+```
+
+---
+
+## 5️⃣ APPLY INTEREST BY MANAGER
+
+**Endpoint:** `/api/account/apply_interest/`
+**Method:** POST
+
+**Request Body:**
+
+```json
+{
+  "interest_percent": 10
+}
+```
+
+---
+
+
+## CHECK THE CUSTOMER LOAN DETAILS
+**Endpoint:** `/api/account/CUST1001/`
+**Method:** GET
+
+**Response:**
+```json
+{
+  "customer_id": "CUST1001",
+  "email": "customer1@bank.com",
+  "mobile_number": "987654***",
+  "role": "customer",
+  "loans": [
+    {
+      "loan_id": 5,
+      "total_amount": 100000,
+      "paid_amount": 30000,
+      "interest_percent": 10
+    }
+  ]
+}
+```
+---
+
+
+
+
