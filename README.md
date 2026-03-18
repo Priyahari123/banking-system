@@ -115,6 +115,22 @@ python -m celery -A bank_system worker --loglevel=info -P solo
 
 
 
+
+## 1️⃣ LOGIN
+
+**Endpoint:** `/api/login/`  
+**Method:** POST  
+
+**Request Body:**
+```json
+{
+  "email": "manager123@gmail.com",
+  "password": "test123"
+}
+````
+
+---
+
 ## 2️⃣ CREATE USER BY MANAGER
 
 **Endpoint:** `/api/user/create/`
