@@ -114,7 +114,7 @@ Start Celery Worker
 python -m celery -A bank_system worker --loglevel=info -P solo
 
 
-
+```
 
 ## 1️⃣ LOGIN
 
@@ -127,7 +127,7 @@ python -m celery -A bank_system worker --loglevel=info -P solo
   "email": "manager123@gmail.com",
   "password": "test123"
 }
-````
+```
 
 ---
 
